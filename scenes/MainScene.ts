@@ -70,12 +70,17 @@ export function create(this: Phaser.Scene) {
   });
 
   const spawnEnemyTimer = setInterval(() => {
-    spawnEnemy(this, "shooter-atlas", `spaceShips_00${Math.ceil(Math.random() * 9)}.png`, enemies);
+    if (playerHealth > 0 && this.scene && !this.scene.isPaused()) {
+      spawnEnemy(this, "shooter-atlas", `spaceShips_00${Math.ceil(Math.random() * 9)}.png`, enemies);
+    }
   }, GAME_CONFIG.ENEMIES.SPAWN_INTERVAL);
+
+  // (this as any).spawnEnemyTimer = spawnEnemyTimer;
 
   this.events.on('shutdown', () => {
     clearInterval(spawnEnemyTimer);
-  });}
+  });
+}
 
 export function update(this: Phaser.Scene) {
   if (playerHealth <= 0) {

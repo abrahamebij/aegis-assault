@@ -1,6 +1,8 @@
 import { GAME_CONFIG } from "../config/gameConfig";
 
 export function spawnEnemy(scene: Phaser.Scene, atlas: string, spriteName: string, enemies: Phaser.Physics.Arcade.StaticGroup) {
+  if (!scene.physics) return;
+
   const side = Phaser.Math.Between(0, 3);
   let x: number, y: number;
 
@@ -28,5 +30,6 @@ export function spawnEnemy(scene: Phaser.Scene, atlas: string, spriteName: strin
 
   enemies.add(enemy)
   
+  console.log('enemy: ', enemy);
   return enemy;
 }

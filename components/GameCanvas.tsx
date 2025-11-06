@@ -2,20 +2,15 @@
 import { useRef, useEffect } from "react";
 import { GAME_CONFIG } from "@/config/gameConfig";
 import { preload, create, update } from "@/scenes/MainScene";
-
+import { useGameStore } from "@/stores/gameStore";
 import * as Phaser from "phaser";
 
-interface GameCanvasProps {
-  onGameOver: (score: number) => void;
-}
-
-const GameCanvas = ({ onGameOver }: GameCanvasProps) => {
+const GameCanvas = () => {
   const gameRef = useRef<HTMLDivElement>(null);
+  const gameRef2 = useRef<Phaser.Game | null>(null);
+  const restartGame = useGameStore(state => state.restartGame);
 
-  useEffect(() => {  
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any & { triggerGameOver: (score: number) => void }).triggerGameOver = onGameOver;
-
+  useEffect(() => {
     const config = {
       type: Phaser.AUTO,
       parent: gameRef.current!,
@@ -37,19 +32,40 @@ const GameCanvas = ({ onGameOver }: GameCanvasProps) => {
     };
 
     const game = new Phaser.Game(config);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any & { restartPhaserGame: () => void }).restartPhaserGame = () => {
-      game.scene.stop('MainScene');
-      game.scene.start('MainScene');
-    };
+    gameRef2.current = game;
 
     return () => {
       game.destroy(true);
     };
-  }, [onGameOver]);
+  }, []);
+
+  useEffect(() => {
+    let prevIsGameOver = useGameStore.getState().isGameOver;
+    let prevIsPaused = useGameStore.getState().isPaused;
+    const unsubscribe = useGameStore.subscribe((state) => {
+      const currentIsGameOver = state.isGameOver;
+      const currentIsPaused = state.isPaused;
+      
+      if (!currentIsGameOver && prevIsGameOver && gameRef2.current) {
+        gameRef2.current.scene.stop('MainScene');
+        gameRef2.current.scene.start('MainScene');
+      }
+      
+      if (currentIsPaused !== prevIsPaused && gameRef2.current) {
+        if (currentIsPaused) {
+          gameRef2.current.scene.pause('MainScene');
+        } else {
+          gameRef2.current.scene.resume('MainScene');
+        }
+      }
+      
+      prevIsGameOver = currentIsGameOver;
+      prevIsPaused = currentIsPaused;
+    });
+    return unsubscribe;
+  }, []);
 
   return <div ref={gameRef} />;
-};
+}
 
 export default GameCanvas;

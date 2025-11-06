@@ -1,6 +1,10 @@
 
+import { useGameStore } from '../stores/gameStore';
+
 export function gameOver(this: Phaser.Scene, score: number) {
+  if ((this as any).spawnEnemyTimer) {
+    clearInterval((this as any).spawnEnemyTimer);
+  }
   this.scene.pause();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).triggerGameOver(score);
+  useGameStore.getState().triggerGameOver(score);
 }
