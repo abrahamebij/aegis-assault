@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { fireProjectile } from "../actions/combat";
 import { spawnEnemy } from "../actions/spawning";
 import { gameOver } from "../actions/state";
@@ -88,6 +89,15 @@ export function update(this: Phaser.Scene) {
     return;
   }
 
+  // Update enemy health bar positions
+  enemies.children.entries.forEach((enemy) => {
+    const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
+    if ((enemySprite as any).healthBar) {
+      (enemySprite as any).healthBar.x = enemySprite.x;
+      (enemySprite as any).healthBar.y = enemySprite.y;
+    }
+  });
+
   projectiles.children.entries.forEach((p) => {
     const projectile = p as Phaser.Physics.Arcade.Sprite;
     if (projectile.x < 0 || projectile.x > GAME_CONFIG.SCREEN.WIDTH || projectile.y < 0 || projectile.y > GAME_CONFIG.SCREEN.HEIGHT) {
@@ -99,10 +109,32 @@ export function update(this: Phaser.Scene) {
       this.physics.add.overlap(projectile, enemySprite, () => {
         const particles = (this as Phaser.Scene & { particles: Phaser.GameObjects.Particles.ParticleEmitter }).particles;
         particles.emitParticleAt(enemySprite.x, enemySprite.y, 10);
-        enemySprite.destroy(true);
-        projectile.destroy(true);
 
-        setScore(score + 10);
+        // Handle enemy health
+        (enemySprite as any).health -= 1;
+
+        if ((enemySprite as any).health <= 0) {
+          // Destroy health bar if exists
+          if ((enemySprite as any).healthBar) {
+            (enemySprite as any).healthBar.destroy();
+          }
+          enemySprite.destroy(true);
+          setScore(score + 10);
+        } else {
+          // Update health bar
+          const healthBar = (enemySprite as any).healthBar;
+          if (healthBar) {
+            const healthPercent = (enemySprite as any).health / (enemySprite as any).maxHealth;
+            healthBar.clear();
+            healthBar.fillStyle(healthPercent > 0.5 ? 0x00ff00 : healthPercent > 0.25 ? 0xffff00 : 0xff0000);
+            healthBar.fillRect(-15, -25, 30 * healthPercent, 4);
+            healthBar.lineStyle(1, 0xffffff);
+            healthBar.strokeRect(-15, -25, 30, 4);
+          }
+          setScore(score + 5);
+        }
+
+        projectile.destroy(true);
         scoreText.setText("Score: " + score);
       });
     });
@@ -119,6 +151,10 @@ export function update(this: Phaser.Scene) {
           const damageParticles = (this as Phaser.Scene & { damageParticles: Phaser.GameObjects.Particles.ParticleEmitter }).damageParticles;
           damageParticles.emitParticleAt(enemySprite.x, enemySprite.y, 15);
 
+          // Destroy health bar if exists
+          if ((enemySprite as any).healthBar) {
+            (enemySprite as any).healthBar.destroy();
+          }
           enemySprite.destroy(true);
 
           healthBar.clear();

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GAME_CONFIG } from "../config/gameConfig";
 
 export function spawnEnemy(scene: Phaser.Scene, atlas: string, spriteName: string, enemies: Phaser.Physics.Arcade.StaticGroup) {
@@ -25,11 +26,26 @@ export function spawnEnemy(scene: Phaser.Scene, atlas: string, spriteName: strin
   .setScale(0.6);
   (enemy.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
   
+  // Randomly assign health (30% chance for multi-hit enemies)
+  const hasHealth = Math.random() < 0.3;
+  const maxHealth = hasHealth ? Phaser.Math.Between(2, 3) : 1;
+  (enemy as any).health = maxHealth;
+  (enemy as any).maxHealth = maxHealth;
+
+  // Create health bar for multi-hit enemies
+  if (hasHealth) {
+    const healthBar = scene.add.graphics();
+    healthBar.fillStyle(0x00ff00);
+    healthBar.fillRect(-15, -25, 30, 4);
+    healthBar.lineStyle(1, 0xffffff);
+    healthBar.strokeRect(-15, -25, 30, 4);
+    (enemy as any).healthBar = healthBar;
+  }
+
   // Move towards center
   scene.physics.moveTo(enemy, GAME_CONFIG.SCREEN.CENTER_X, GAME_CONFIG.SCREEN.CENTER_Y, 100);
 
   enemies.add(enemy)
-  
-  console.log('enemy: ', enemy);
+
   return enemy;
 }
