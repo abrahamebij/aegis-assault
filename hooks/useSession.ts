@@ -39,7 +39,7 @@ export const useGetSession = () => {
     return useQuery<SessionData>({
         queryKey: ['session'],
         queryFn: () => apiFetch('/api/auth/me'),
-        retry: false, // Don't retry on 401/403
+        // retry: false, // Don't retry on 401/403
     });
 };
 

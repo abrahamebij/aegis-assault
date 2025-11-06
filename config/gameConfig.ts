@@ -1,9 +1,11 @@
+"use client"
+const isWindow = typeof window !== "undefined"
 export class GameConfig {
   SCREEN = {
-    WIDTH: window.innerWidth,
-    HEIGHT: window.innerHeight,
-    CENTER_X: window.innerWidth / 2,
-    CENTER_Y: window.innerHeight / 2
+    WIDTH: isWindow ? window.innerWidth : 0,
+    HEIGHT: isWindow ? window.innerHeight : 0,
+    CENTER_X: isWindow ? window.innerWidth / 2 : 0,
+    CENTER_Y: isWindow ? window.innerHeight / 2 : 0
   };
   
   UI = {

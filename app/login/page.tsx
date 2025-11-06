@@ -6,6 +6,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useMutation } from "@tanstack/react-query";
 import { useGetSession } from "@/hooks/useSession";
 import { useRouter } from "next/navigation";
+import Img from "@/components/ui/Img";
 
 const Login = () => {
   const [isCopied, setIsCopied] = useState(false);
@@ -22,7 +23,7 @@ const Login = () => {
     if (session?.isLoggedIn) {
       router.push("/play");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   const handleCopy = () => {
@@ -52,14 +53,25 @@ const Login = () => {
             className="text-lg px-12"
           >
             {isPending ? "Connecting..." : "Connect MetaMask"}
+            <Img
+              src="/icons/metamask.png"
+              alt="Metamask's Logo"
+              className={`size-8 ml-2 ${isPending && "animate-spin"}`}
+            />
           </Button>
         )}
 
         {(data?.signature || session?.walletAddress) && (
           <div className="flex items-center justify-center gap-2 text-green-500 font-mono bg-green-500/10 rounded-lg p-3 border border-green-500/20">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            Connected: {session?.walletAddress ? session?.walletAddress.slice(0, 6): data?.walletAddress.slice(0, 6)}...
-            {session?.walletAddress ? session?.walletAddress.slice(-4): data?.walletAddress.slice(-4)}
+            Connected:{" "}
+            {session?.walletAddress
+              ? session?.walletAddress.slice(0, 6)
+              : data?.walletAddress.slice(0, 6)}
+            ...
+            {session?.walletAddress
+              ? session?.walletAddress.slice(-4)
+              : data?.walletAddress.slice(-4)}
             <Button variant="ghost" size="sm" onClick={handleCopy}>
               {isCopied ? <FaCheckCircle /> : <FaCopy />}
             </Button>
