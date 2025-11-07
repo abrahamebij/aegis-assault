@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { GAME_CONFIG } from "../config/gameConfig";
+import { playerLevel } from "../utils/gameVariables";
 
 export function spawnEnemy(scene: Phaser.Scene, atlas: string, spriteName: string, enemies: Phaser.Physics.Arcade.StaticGroup) {
   if (!scene.physics) return;
@@ -26,8 +27,9 @@ export function spawnEnemy(scene: Phaser.Scene, atlas: string, spriteName: strin
   .setScale(0.6);
   (enemy.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
   
-  // Randomly assign health (30% chance for multi-hit enemies)
-  const hasHealth = Math.random() < 0.3;
+  // Increase health enemy chance based on level
+  const healthEnemyChance = Math.min(0.3 + (playerLevel - 1) * 0.1, 0.8);
+  const hasHealth = Math.random() < healthEnemyChance;
   const maxHealth = hasHealth ? Phaser.Math.Between(2, 3) : 1;
   (enemy as any).health = maxHealth;
   (enemy as any).maxHealth = maxHealth;

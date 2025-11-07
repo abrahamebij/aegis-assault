@@ -20,7 +20,7 @@ export const Hero = () => {
           The On-Chain Arena Shooter with an AI-Powered Strategist
         </p>
         <Button variant="hero" className="text-lg px-12 py-6 h-auto">
-          <Link href={"/login"}>PLAY NOW</Link>
+          <Link href={"/play"}>PLAY NOW</Link>
         </Button>
       </div>
 

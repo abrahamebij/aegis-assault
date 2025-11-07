@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { Button } from "../ui/button";
 
@@ -15,7 +14,7 @@ export const FinalCTA = () => {
           Join the arena and prove your skills on the blockchain
         </p>
         <Button variant="hero" size="lg" className="text-lg px-12 py-6 h-auto">
-          <Link href={"/login"}>PLAY NOW</Link>
+          <Link href={"/play"}>PLAY NOW</Link>
         </Button>
       </div>
     </section>

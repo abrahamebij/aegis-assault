@@ -8,7 +8,7 @@ import * as Phaser from "phaser";
 const GameCanvas = () => {
   const gameRef = useRef<HTMLDivElement>(null);
   const gameRef2 = useRef<Phaser.Game | null>(null);
-  const restartGame = useGameStore(state => state.restartGame);
+  // const restartGame = useGameStore(state => state.restartGame);
 
   useEffect(() => {
     const config = {
@@ -24,7 +24,7 @@ const GameCanvas = () => {
         },
       },
       scene: {
-        key: 'MainScene',
+        key: "MainScene",
         preload,
         create,
         update,
@@ -45,20 +45,20 @@ const GameCanvas = () => {
     const unsubscribe = useGameStore.subscribe((state) => {
       const currentIsGameOver = state.isGameOver;
       const currentIsPaused = state.isPaused;
-      
+
       if (!currentIsGameOver && prevIsGameOver && gameRef2.current) {
-        gameRef2.current.scene.stop('MainScene');
-        gameRef2.current.scene.start('MainScene');
+        gameRef2.current.scene.stop("MainScene");
+        gameRef2.current.scene.start("MainScene");
       }
-      
+
       if (currentIsPaused !== prevIsPaused && gameRef2.current) {
         if (currentIsPaused) {
-          gameRef2.current.scene.pause('MainScene');
+          gameRef2.current.scene.pause("MainScene");
         } else {
-          gameRef2.current.scene.resume('MainScene');
+          gameRef2.current.scene.resume("MainScene");
         }
       }
-      
+
       prevIsGameOver = currentIsGameOver;
       prevIsPaused = currentIsPaused;
     });

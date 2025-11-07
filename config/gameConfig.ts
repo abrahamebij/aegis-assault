@@ -9,7 +9,8 @@ export class GameConfig {
   };
   
   UI = {
-    HEALTH_BAR: { x: 20, y: 20, width: 200, height: 20 }
+    HEALTH_BAR: { x: 20, y: 20, width: 200, height: 20 },
+    XP_BAR: { x: 20, y: 50, width: 200, height: 20 }
   };
   
   PLAYER = {
@@ -22,7 +23,7 @@ export class GameConfig {
   };
   
   PROJECTILES = {
-    SPEED: 500
+    SPEED: 200
   };
 }
 

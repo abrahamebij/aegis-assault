@@ -2,19 +2,28 @@
 import { useEffect } from "react";
 import GameOverScreen from "@/components/GameOverScreen";
 import PauseScreen from "@/components/PauseScreen";
+import LevelUpScreen from "@/components/LevelUpScreen";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { useGameStore } from "@/stores/gameStore";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import Loader from "@/components/game/Loader";
+import { Pause } from "lucide-react";
 
 const GameCanvas = dynamic(() => import("@/components/GameCanvas"), {
   ssr: false,
 });
 
 const Game = () => {
-  const { isGameOver, finalScore, restartGame, isPaused, togglePause } =
-    useGameStore();
+  const {
+    isGameOver,
+    finalScore,
+    restartGame,
+    isPaused,
+    togglePause,
+    isLevelingUp,
+  } = useGameStore();
   const { isLoggedIn, isLoading } = useUser();
 
   useEffect(() => {
@@ -30,20 +39,7 @@ const Game = () => {
   }, [isPaused, isGameOver, togglePause]);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="p-8 rounded-2xl border border-gray-800">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="w-3 h-3 bg-primary rounded-full animate-bounce"></div>
-            <div className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></div>
-            <div className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></div>
-          </div>
-          <h2 className="text-xl font-gaming text-primary mt-4">
-            Loading Game...
-          </h2>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (isLoggedIn == false) {
@@ -64,17 +60,18 @@ const Game = () => {
 
   return (
     <div style={{ position: "relative" }}>
-      {!isGameOver && (
+      {!isGameOver && !isLevelingUp && (
         <Button
           onClick={togglePause}
-          className="absolute top-4 right-4 z-40"
+          className="absolute bottom-4 right-4 z-40"
           size="sm"
         >
-          Pause
+          <Pause />
         </Button>
       )}
       <GameCanvas />
-      {isPaused && <PauseScreen onResume={togglePause} />}
+      {isPaused && !isLevelingUp && <PauseScreen onResume={togglePause} />}
+      <LevelUpScreen />
       {isGameOver && (
         <GameOverScreen score={finalScore} onRestart={restartGame} />
       )}

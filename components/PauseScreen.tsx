@@ -13,9 +13,9 @@ const PauseScreen = ({ onResume }: PauseScreenProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="p-8 text-center max-w-md">
+      <Card className="p-8 text-center max-w-xl w-1/2">
         <h2 className="text-2xl font-bold mb-6">Game Paused</h2>
-        
+
         <div className="space-y-4 mb-6">
           <div className="flex items-center justify-between">
             <span>Music</span>
@@ -27,7 +27,7 @@ const PauseScreen = ({ onResume }: PauseScreenProps) => {
               {musicEnabled ? "ON" : "OFF"}
             </Button>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <span>Sound Effects</span>
             <Button
@@ -39,7 +39,7 @@ const PauseScreen = ({ onResume }: PauseScreenProps) => {
             </Button>
           </div>
         </div>
-        
+
         <Button onClick={onResume} size="lg" className="w-full">
           Resume Game
         </Button>

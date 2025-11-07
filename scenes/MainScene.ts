@@ -4,9 +4,11 @@ import { spawnEnemy } from "../actions/spawning";
 import { gameOver } from "../actions/state";
 import { GAME_CONFIG } from "../config/gameConfig";
 import {
-  projectiles, enemies, playerHealth, healthBar, score, scoreText,
-  setProjectiles, setEnemies, setPlayerHealth, setHealthBar, setScore, setScoreText
+  projectiles, enemies, playerHealth, healthBar, score, scoreText, playerXP, playerLevel, xpBar, levelText, xpToNextLevel,
+  setProjectiles, setEnemies, setPlayerHealth, setHealthBar, setScore, setScoreText, setPlayerXP, setPlayerLevel, setXpBar, setLevelText
 } from "../utils/gameVariables";
+import { allUpgrades } from "../config/upgrades";
+import { useGameStore } from "@/stores/gameStore";
 
 export function preload(this: Phaser.Scene) {
   this.load.image("bg", "assets/bg.svg");
@@ -47,11 +49,24 @@ export function create(this: Phaser.Scene) {
   newHealthBar.strokeRect(GAME_CONFIG.UI.HEALTH_BAR.x, GAME_CONFIG.UI.HEALTH_BAR.y, GAME_CONFIG.UI.HEALTH_BAR.width, GAME_CONFIG.UI.HEALTH_BAR.height);
   setHealthBar(newHealthBar);
 
-  const newScoreText = this.add.text(GAME_CONFIG.SCREEN.WIDTH - 100, 20, "Score: 0", {
+  const newScoreText = this.add.text(GAME_CONFIG.SCREEN.WIDTH * .87, 20, "Score: 0", {
     fontSize: "16px",
     color: "#ffffff",
   });
   setScoreText(newScoreText);
+
+  // XP Bar
+  const newXpBar = this.add.graphics();
+  newXpBar.lineStyle(2, 0xffffff);
+  newXpBar.strokeRect(GAME_CONFIG.UI.XP_BAR.x, GAME_CONFIG.UI.XP_BAR.y, GAME_CONFIG.UI.XP_BAR.width, GAME_CONFIG.UI.XP_BAR.height);
+  setXpBar(newXpBar);
+
+  // Level Text
+  const newLevelText = this.add.text(GAME_CONFIG.UI.XP_BAR.x + 10, GAME_CONFIG.UI.XP_BAR.y + 2, "Level: 1", {
+    fontSize: "16px",
+    color: "#ffffff",
+  });
+  setLevelText(newLevelText);
 
   const player = this.physics.add.sprite(GAME_CONFIG.SCREEN.CENTER_X, GAME_CONFIG.SCREEN.CENTER_Y, "shooter-atlas", "spaceShips_002.png");
   player.setName("player");
@@ -74,7 +89,7 @@ export function create(this: Phaser.Scene) {
     if (playerHealth > 0 && this.scene && !this.scene.isPaused()) {
       spawnEnemy(this, "shooter-atlas", `spaceShips_00${Math.ceil(Math.random() * 9)}.png`, enemies);
     }
-  }, GAME_CONFIG.ENEMIES.SPAWN_INTERVAL);
+  }, Math.max(300, GAME_CONFIG.ENEMIES.SPAWN_INTERVAL - (playerLevel - 1) * 100));
 
   // (this as any).spawnEnemyTimer = spawnEnemyTimer;
 
@@ -120,6 +135,10 @@ export function update(this: Phaser.Scene) {
           }
           enemySprite.destroy(true);
           setScore(score + 10);
+
+          // Grant XP
+          setPlayerXP(playerXP + 15);
+          checkForLevelUp.call(this);
         } else {
           // Update health bar
           const healthBar = (enemySprite as any).healthBar;
@@ -169,5 +188,66 @@ export function update(this: Phaser.Scene) {
         }
       });
     });
+  }
+}
+
+function checkForLevelUp(this: Phaser.Scene) {
+  if (playerLevel < xpToNextLevel.length - 1 && playerXP >= xpToNextLevel[playerLevel]) {
+    setPlayerLevel(playerLevel + 1);
+    levelText.setText(`Level: ${playerLevel}`);
+    triggerLevelUpScreen.call(this);
+  }
+
+  // Update XP bar
+  const currentLevelXP = playerLevel > 1 ? xpToNextLevel[playerLevel - 1] : 0;
+  const nextLevelXP = xpToNextLevel[playerLevel] || xpToNextLevel[xpToNextLevel.length - 1];
+  const xpProgress = (playerXP - currentLevelXP) / (nextLevelXP - currentLevelXP);
+
+  xpBar.clear();
+  xpBar.fillStyle(0x0066ff);
+  xpBar.fillRect(GAME_CONFIG.UI.XP_BAR.x, GAME_CONFIG.UI.XP_BAR.y, GAME_CONFIG.UI.XP_BAR.width * Math.min(xpProgress, 1), GAME_CONFIG.UI.XP_BAR.height);
+  xpBar.lineStyle(2, 0xffffff);
+  xpBar.strokeRect(GAME_CONFIG.UI.XP_BAR.x, GAME_CONFIG.UI.XP_BAR.y, GAME_CONFIG.UI.XP_BAR.width, GAME_CONFIG.UI.XP_BAR.height);
+}
+
+function triggerLevelUpScreen(this: Phaser.Scene) {
+  this.scene.pause();
+  const selectedUpgrades = Phaser.Utils.Array.Shuffle([...allUpgrades]).slice(0, 3);
+  useGameStore.getState().triggerLevelUp(selectedUpgrades);
+
+  // Set up global apply upgrade function
+  (window as any).applyUpgrade = (upgradeId: string) => {
+    applyUpgrade.call(this, upgradeId);
+    this.scene.resume();
+  };
+}
+
+function applyUpgrade(this: Phaser.Scene, upgradeId: string) {
+  const player = this.children.getByName('player') as Phaser.Physics.Arcade.Sprite;
+
+  switch (upgradeId) {
+    case 'multiShot':
+      player.setData('hasMultiShot', true);
+      setTimeout(() => {
+        player.setData('hasMultiShot', false);
+      }, 15000);
+      break;
+    case 'piercing':
+      player.setData('hasPiercing', true);
+      break;
+    case 'fireRate':
+      player.setData('fireRateBoost', (player.getData('fireRateBoost') || 1) * 1.5);
+      break;
+    case 'damage':
+      player.setData('damageMultiplier', (player.getData('damageMultiplier') || 1) * 2);
+      break;
+    case 'health':
+      const newMaxHealth = GAME_CONFIG.PLAYER.INITIAL_HEALTH + 25;
+      GAME_CONFIG.PLAYER.INITIAL_HEALTH = newMaxHealth;
+      setPlayerHealth(Math.min(playerHealth + 25, newMaxHealth));
+      break;
+    case 'speed':
+      player.setData('speedBoost', (player.getData('speedBoost') || 1) * 1.3);
+      break;
   }
 }
