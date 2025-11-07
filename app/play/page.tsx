@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import GameOverScreen from "@/components/GameOverScreen";
 import PauseScreen from "@/components/PauseScreen";
 import LevelUpScreen from "@/components/LevelUpScreen";
+import GameTutorial from "@/components/GameTutorial";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { useGameStore } from "@/stores/gameStore";
@@ -23,6 +24,7 @@ const Game = () => {
     isPaused,
     togglePause,
     isLevelingUp,
+    showTutorial,
   } = useGameStore();
   const { isLoggedIn, isLoading } = useUser();
 
@@ -60,7 +62,7 @@ const Game = () => {
 
   return (
     <div style={{ position: "relative" }}>
-      {!isGameOver && !isLevelingUp && (
+      {!isGameOver && !isLevelingUp && !showTutorial && (
         <Button
           onClick={togglePause}
           className="absolute bottom-4 right-4 z-40"
@@ -69,8 +71,9 @@ const Game = () => {
           <Pause />
         </Button>
       )}
-      <GameCanvas />
-      {isPaused && !isLevelingUp && <PauseScreen onResume={togglePause} />}
+      {!showTutorial && <GameCanvas />}
+      <GameTutorial />
+      {isPaused && !isLevelingUp && !showTutorial && <PauseScreen onResume={togglePause} />}
       <LevelUpScreen />
       {isGameOver && (
         <GameOverScreen score={finalScore} onRestart={restartGame} />

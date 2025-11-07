@@ -26,4 +26,11 @@ export function fireProjectile(this: Phaser.Scene, player: Phaser.GameObjects.Sp
         projectile.body.setVelocity(velocityX, velocityY);
         projectiles.add(projectile);
     });
+
+    // Play shoot sound if it exists
+    if ((this as any).shootSound) {
+      (this as any).shootSound.play();
+    }
+
+
 }

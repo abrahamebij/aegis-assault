@@ -42,17 +42,20 @@ const GameCanvas = () => {
   useEffect(() => {
     let prevIsGameOver = useGameStore.getState().isGameOver;
     let prevIsPaused = useGameStore.getState().isPaused;
+    let prevShowTutorial = useGameStore.getState().showTutorial;
+    
     const unsubscribe = useGameStore.subscribe((state) => {
       const currentIsGameOver = state.isGameOver;
       const currentIsPaused = state.isPaused;
-
+      const currentShowTutorial = state.showTutorial;
+      
       if (!currentIsGameOver && prevIsGameOver && gameRef2.current) {
         gameRef2.current.scene.stop("MainScene");
         gameRef2.current.scene.start("MainScene");
       }
 
-      if (currentIsPaused !== prevIsPaused && gameRef2.current) {
-        if (currentIsPaused) {
+      if ((currentIsPaused !== prevIsPaused || currentShowTutorial !== prevShowTutorial) && gameRef2.current) {
+        if (currentIsPaused || currentShowTutorial) {
           gameRef2.current.scene.pause("MainScene");
         } else {
           gameRef2.current.scene.resume("MainScene");
@@ -61,6 +64,7 @@ const GameCanvas = () => {
 
       prevIsGameOver = currentIsGameOver;
       prevIsPaused = currentIsPaused;
+      prevShowTutorial = currentShowTutorial;
     });
     return unsubscribe;
   }, []);

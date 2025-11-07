@@ -10,7 +10,7 @@ import { getSession } from '@/lib/session'; // Assumes lib/session.ts exists
 export async function GET() {
   try {
     const session = await getSession();
-    console.log('session: ', session);
+    // console.log('session: ', session);
 
     if (!session.isLoggedIn) {
       return NextResponse.json({ isLoggedIn: false }, { status: 200 });

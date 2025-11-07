@@ -17,6 +17,8 @@ export function preload(this: Phaser.Scene) {
     "assets/spaceShooter2_spritesheet.png",
     "assets/spaceShooter2_spritesheet.xml"
   );
+  this.load.audio("battle", "music/battle.wav");
+  this.load.audio("shoot", "music/shoot.mp3");
 }
 
 export function create(this: Phaser.Scene) {
@@ -80,8 +82,21 @@ export function create(this: Phaser.Scene) {
   setProjectiles(this.physics.add.staticGroup());
   setEnemies(this.physics.add.staticGroup());
 
+  // Set up battle music
+  const battleMusic = this.sound.add('battle', { loop: true, volume: 0.5 });
+  (this as any).battleMusic = battleMusic;
+  (this as any).musicStarted = false;
+  
+  // Set up shoot sound
+  (this as any).shootSound = this.sound.add('shoot', { volume: 0.3 });
+
   const spaceBar = this?.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   spaceBar?.on("down", () => {
+    // Start music on first interaction
+    if (!(this as any).musicStarted) {
+      battleMusic.play();
+      (this as any).musicStarted = true;
+    }
     fireProjectile.call(this, player, projectiles);
   });
 

@@ -24,6 +24,6 @@ export const sessionOptions = {
 export async function getSession() {
   "use server"
   const session = await getIronSession<SessionData>(await cookies(), { ...sessionOptions, password: process.env.SECRET_COOKIE_PASSWORD! });
-  console.log('session: ', session);
+  // console.log('session: ', session);
   return session;
 }
