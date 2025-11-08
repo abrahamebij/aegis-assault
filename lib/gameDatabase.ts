@@ -1,3 +1,4 @@
+
 interface GameSession {
   walletAddress: string;
   finalScore: number;
