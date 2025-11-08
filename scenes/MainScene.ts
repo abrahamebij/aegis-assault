@@ -9,6 +9,7 @@ import {
 } from "../utils/gameVariables";
 import { allUpgrades } from "../config/upgrades";
 import { useGameStore } from "@/stores/gameStore";
+import { gameDB } from "@/lib/gameDatabase";
 
 export function preload(this: Phaser.Scene) {
   this.load.image("bg", "assets/bg.svg");
@@ -22,6 +23,10 @@ export function preload(this: Phaser.Scene) {
 }
 
 export function create(this: Phaser.Scene) {
+  // Start game session tracking with wallet address
+  const walletAddress = (this as any).walletAddress || 'anonymous';
+  gameDB.startSession(walletAddress);
+
   this.add.tileSprite(0, 0, GAME_CONFIG.SCREEN.WIDTH, GAME_CONFIG.SCREEN.HEIGHT, "bg").setOrigin(0, 0);
 
   const particles = this.add.particles(0, 0, "shooter-atlas", {
@@ -145,11 +150,19 @@ export function update(this: Phaser.Scene) {
 
         if ((enemySprite as any).health <= 0) {
           // Destroy health bar if exists
+          const enemyType = (enemySprite as any).healthBar ? 'advanced' : 'basic';
           if ((enemySprite as any).healthBar) {
             (enemySprite as any).healthBar.destroy();
           }
           enemySprite.destroy(true);
           setScore(score + 10);
+
+          // Update game database
+          gameDB.addEnemyKill(enemyType);
+          gameDB.updateSession({ 
+            finalScore: score + 10,
+            finalLevelReached: playerLevel
+          });
 
           // Grant XP
           setPlayerXP(playerXP + 15);
@@ -239,6 +252,9 @@ function triggerLevelUpScreen(this: Phaser.Scene) {
 
 function applyUpgrade(this: Phaser.Scene, upgradeId: string) {
   const player = this.children.getByName('player') as Phaser.Physics.Arcade.Sprite;
+  
+  // Track upgrade in database
+  gameDB.addUpgrade(upgradeId);
 
   switch (upgradeId) {
     case 'multiShot':
