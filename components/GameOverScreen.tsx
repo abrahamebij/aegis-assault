@@ -1,8 +1,9 @@
 import { gameDB } from "@/lib/gameDatabase";
 import { Button } from "./ui/button";
 import { useAI } from "@/hooks/useAI";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
+import { useSubmitScore } from "@/hooks/useSession";
 
 interface GameOverScreenProps {
   score: number;
@@ -13,6 +14,7 @@ const GameOverScreen = ({ score, onRestart }: GameOverScreenProps) => {
   const [advice, setAdvice] = useState<string | null>(null);
   const db = gameDB.getRecentSessions(5);
   const { mutate, isPending } = useAI();
+  const { mutate: submitScore } = useSubmitScore();
 
   const handleOracleClick = () => {
     mutate(db, {
@@ -21,6 +23,18 @@ const GameOverScreen = ({ score, onRestart }: GameOverScreenProps) => {
       },
     });
   };
+
+  useEffect(() => {
+    submitScore(
+      { score },
+      {
+        onSuccess: (data) => {
+          console.log("data: ", data);
+        },
+      }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [score]);
 
   return (
     <div className="absolute inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center text-white">

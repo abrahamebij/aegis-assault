@@ -77,7 +77,7 @@ const GameCanvas = () => {
     return unsubscribe;
   }, []);
 
-  return <div ref={gameRef} />;
+  return <div className="overflow-hidden" ref={gameRef} />;
 }
 
 export default GameCanvas;
