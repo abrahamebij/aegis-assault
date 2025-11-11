@@ -1,8 +1,9 @@
 "use server"
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/session'; // Assumes lib/session.ts exists
-// Import your Somnia/DynamoDB logic here in the future
-// import { submitToBlockchain, saveToDatabase } from '@/lib/somnia';
+import { stringToHex } from 'viem';
+import { SchemaEncoder } from '@somnia-chain/streams';
+import { initSomnia } from '@/lib/somnia';
 
 /**
  * @route POST /api/submit-score
@@ -11,6 +12,7 @@ import { getSession } from '@/lib/session'; // Assumes lib/session.ts exists
  * This is used by the `useSubmitScore` hook.
  */
 export async function POST(request: Request) {
+  const { sdk, schemaId, gameSchema } = await initSomnia();
   try {
     // 1. Check if user is logged in
     const session = await getSession();
@@ -19,34 +21,80 @@ export async function POST(request: Request) {
     }
 
     // 2. Get the score from the request body
-    const { score } = await request.json();
-    if (typeof score !== 'number') {
-      return NextResponse.json({ error: 'Invalid score' }, { status: 400 });
-    }
+    const data = await request.json();
+    console.log('data: ', data);
 
-    const player = session.walletAddress;
+    const playerAddress = session.walletAddress as `0x${string}`;
 
-    console.log(`Received score ${score} from player ${player}`);
+    console.log(`Received score ${data.finalScore} from player ${playerAddress}`);
 
     // 3. --- THIS IS WHERE YOU DO YOUR WEB3 & DB LOGIC ---
     //
-    //    For the hackathon, you would do two things here:
-    //
-    //    a) Submit to your DynamoDB (for fast reads by the AI)
-    //    await saveToDatabase({ player, score });
+    const schemaEncoder = new SchemaEncoder(gameSchema);
+
+    // const adminAccount = privateKeyToAccount(
+    //   process.env.ADMIN_WALLET_PRIVATE_KEY as `0x${string}`
+    // );
+    // const adminWalletClient = createWalletClient({
+    //   account: adminAccount,
+    //   chain: somniaTestnet,
+    //   transport: http(somniaTestnet.rpcUrls.default.http[0]),
+    // });
+
+    // const publicClient = createPublicClient({
+    //   chain: somniaTestnet,
+    //   transport: http(somniaTestnet.rpcUrls.default.http[0]),
+    // });
+
+    // const sdk = new SDK({
+    //   public: publicClient,
+    //   wallet: adminWalletClient,
+    // });
+
+    const encodedData = schemaEncoder.encodeData([
+      { name: 'runId', value: data.runId, type: 'string' },
+      {
+        name: 'finalScore',
+        value: data.finalScore.toString(),
+        type: 'uint256',
+      },
+      {
+        name: 'finalLevelReached',
+        value: data.finalLevelReached.toString(),
+        type: 'uint32',
+      },
+      {
+        name: 'timeSurvived',
+        value: data.timeSurvived.toString(),
+        type: 'uint32',
+      },
+      { name: 'totalKills', value: data.totalKills.toString(), type: 'uint32' },
+      {
+        name: 'totalUpgrades',
+        value: data.totalUpgrades.toString(),
+        type: 'uint32',
+      },
+      { name: 'buildJson', value: data.buildJson, type: 'string' }, // Now holds '{"multiShot":2, ...}'
+      { name: 'killCountJson', value: data.killCountJson, type: 'string' }, // Holds '{"basic":21, ...}'
+    ]);
     //
     //    b) Submit to the Somnia smart contract (for verifiable proof)
-    //    const tx = await submitToBlockchain({ player, score });
-    //    console.log('Transaction hash:', tx.hash);
 
-    // 4. For now, we'll just log it and return success
-    return NextResponse.json({ 
-      ok: true, 
-      message: `Score of ${score} for ${player} received.` 
+    const publishTxHash = await sdk.streams.set([{
+      id: stringToHex(`${data.runId}`, { size: 32 }),
+      schemaId: schemaId!,
+      data: encodedData,
+    }])
+
+    console.log('Score saved to Somnia Stream. Tx:', publishTxHash);
+
+    return NextResponse.json({
+      ok: true,
+      message: `Score saved to Somnia.`,
+      transactionHash: publishTxHash,
     });
-
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Server error: Unable to save' }, { status: 500 });
   }
 }

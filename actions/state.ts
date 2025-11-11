@@ -11,6 +11,7 @@ export function gameOver(this: Phaser.Scene, score: number) {
 
   // End game session tracking
   gameDB.endSession(score);
+  // console.log(schemaId)
 
   // Log game database to console
   // console.log('=== GAME OVER - DATABASE STATS ===');

@@ -25,14 +25,30 @@ const GameOverScreen = ({ score, onRestart }: GameOverScreenProps) => {
   };
 
   useEffect(() => {
-    submitScore(
-      { score },
-      {
-        onSuccess: (data) => {
-          console.log("data: ", data);
+    const currentSession = gameDB.getRecentSessions(1)[0];
+    if (currentSession) {
+      const totalKills = Object.values(currentSession.enemyKillCount).reduce(
+        (sum, count) => sum + count,
+        0
+      );
+      submitScore(
+        {
+          runId: currentSession.id,
+          finalScore: score,
+          finalLevelReached: currentSession.finalLevelReached,
+          timeSurvived: currentSession.timeSurvived,
+          totalKills,
+          totalUpgrades: currentSession.finalBuild.length,
+          buildJson: `${JSON.stringify(currentSession.finalBuild)}`,
+          killCountJson: `${JSON.stringify(currentSession.enemyKillCount)}`,
         },
-      }
-    );
+        {
+          onSuccess: (data) => {
+            console.log("Score submitted:", data);
+          },
+        }
+      );
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [score]);
 

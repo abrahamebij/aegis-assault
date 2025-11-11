@@ -105,16 +105,15 @@ export const useLogout = () => {
  * Submits the player's game score to the backend.
  */
 interface SubmitScoreParams {
-    score: number;
+    runId: string, finalScore: number, finalLevelReached: number, timeSurvived: number, totalKills: number, totalUpgrades: number, buildJson: string, killCountJson: string,
 }
 
 export const useSubmitScore = () => {
-
     return useMutation({
-        mutationFn: ({ score }: SubmitScoreParams) =>
+        mutationFn: (data: SubmitScoreParams) =>
             apiFetch('/api/submit-score', {
                 method: 'POST',
-                body: JSON.stringify({ score }),
+                body: JSON.stringify(data),
             }),
         onSuccess: () => {
             // After submitting a score, refetch the leaderboard

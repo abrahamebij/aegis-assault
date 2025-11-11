@@ -30,9 +30,13 @@ const GameCanvas = () => {
         preload,
         create,
         update,
-        init: function(this: Phaser.Scene & { walletAddress: string }, data: { walletAddress?: string }) {
-          this.walletAddress = data.walletAddress || 'anonymous';
-        }
+        // eslint-disable-next-line react-hooks/unsupported-syntax
+        init: function (
+          this: Phaser.Scene & { walletAddress: string },
+          data: { walletAddress?: string }
+        ) {
+          this.walletAddress = data.walletAddress || "anonymous";
+        },
       },
     };
 

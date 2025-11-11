@@ -1,31 +1,55 @@
 "use server"
-import { NextResponse } from 'next/server';
-
-// This is a mock database. In your real app, you'd
-// query your AWS DynamoDB or Firebase here.
-const MOCK_LEADERBOARD = [
-  { rank: 1, player: '0x1a2...b3c4', score: 15200 },
-  { rank: 2, player: '0x9f8...e7d6', score: 12100 },
-  { rank: 3, player: '0x4c5...d6e7', score: 9800 },
-  { rank: 4, player: '0x7b8...a9f0', score: 7500 },
-  { rank: 5, player: '0x2d3...c4b5', score: 5100 },
-];
+import { NextResponse } from "next/server";
+import { SchemaEncoder } from "@somnia-chain/streams";
+import { privateKeyToAccount } from "viem/accounts";
+import { getPrivateKey } from "@/lib/server";
+import { initSomnia } from "@/lib/somnia";
 
 /**
  * @route GET /api/leaderboard
- * @desc Fetches the global leaderboard data.
- * This is used by the `useGetLeaderboard` hook.
+ * @desc Fetches leaderboard data stored under the same schemaId.
  */
 export async function GET() {
-  try {
-    // In a real app:
-    // const leaderboardData = await db.collection('scores').orderBy('score', 'desc').limit(10).get();
-    
-    // For the hackathon, we'll return mock data immediately.
-    return NextResponse.json(MOCK_LEADERBOARD);
+  const { sdk, schemaId } = await initSomnia();
 
+  try {
+    // 1️⃣ Resolve admin address (same wallet that submitted the scores)
+    const adminAccount = privateKeyToAccount(await getPrivateKey());
+    const publisher = adminAccount.address;
+
+    // 2️⃣ Fetch all stream entries for this publisher + schema
+    const entries = await sdk.streams.getAllPublisherDataForSchema(schemaId!, publisher);
+
+    if (!entries?.length) {
+      return NextResponse.json([]);
+    }
+
+    // 3️⃣ Decode data based on your schema
+    const encoder = new SchemaEncoder(
+      "string runId, uint256 finalScore, uint32 finalLevelReached, uint32 timeSurvived, uint32 totalKills, uint32 totalUpgrades, string buildJson, string killCountJson"
+    );
+
+    const decoded = entries.map((fields: any[]) => {
+      const obj: Record<string, any> = {};
+      for (const f of fields) {
+        obj[f.name] = f.value?.value ?? f.value;
+      }
+      return obj;
+    });
+
+    // 4️⃣ Sort and format for the leaderboard
+    const leaderboard = decoded
+      .sort((a, b) => Number(b.finalScore) - Number(a.finalScore))
+      .slice(0, 10)
+      .map((item, i) => ({
+        rank: i + 1,
+        player: item.runId || "Unknown",
+        score: Number(item.finalScore),
+      }));
+
+    return NextResponse.json(leaderboard);
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error("Leaderboard fetch error:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
