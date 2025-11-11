@@ -5,6 +5,7 @@ import { WalletClient } from 'viem';
 import { SessionData } from '@/lib/session'; // Assuming you have this type from iron-session
 import { queryClient } from '@/providers';
 import { toast } from 'sonner';
+import { LeaderboardEntry } from '@/types/leaderboard';
 
 // --- Helper Fetch Function ---
 // A simple wrapper for fetch that handles errors and JSON
@@ -128,11 +129,6 @@ export const useSubmitScore = () => {
  *
  * NOTE: You must create 'app/api/leaderboard/route.ts'
  */
-interface LeaderboardEntry {
-    rank: number;
-    player: string;
-    score: number;
-}
 
 export const useGetLeaderboard = () => {
     return useQuery<LeaderboardEntry[]>({

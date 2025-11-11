@@ -1,5 +1,7 @@
 import { Button } from "../ui/button";
 import Link from "next/link";
+import { FaPlay } from "react-icons/fa";
+import { MdLeaderboard } from "react-icons/md";
 
 export const Hero = () => {
   return (
@@ -19,9 +21,21 @@ export const Hero = () => {
         <p className="text-xl md:text-3xl text-muted-foreground mb-12 max-w-3xl mx-auto">
           The On-Chain Arena Shooter with an AI-Powered Strategist
         </p>
-        <Button variant="hero" className="text-lg px-12 py-6 h-auto">
-          <Link href={"/play"}>PLAY NOW</Link>
-        </Button>
+        <div className="flex gap-4 flex-wrap justify-center">
+          <Button variant="hero" size={"lg"}>
+            <Link className="flex gap-2 items-center text-lg" href={"/play"}>
+              Play Now <FaPlay />
+            </Link>
+          </Button>
+          <Button variant="outline" size={"lg"}>
+            <Link
+              className="flex gap-2 items-center text-lg"
+              href={"/leaderboard"}
+            >
+              View Leaderboard <MdLeaderboard />
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Scroll Indicator */}

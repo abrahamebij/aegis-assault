@@ -5,6 +5,7 @@
   Design System — Tailwind v4 style
   All colors are defined as full HSL values.
 */
+@custom-variant hover (&:hover);
 
 @theme {
   --color-background: hsl(260 40% 4%);

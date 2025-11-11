@@ -4,6 +4,7 @@ import { useAI } from "@/hooks/useAI";
 import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { useSubmitScore } from "@/hooks/useSession";
+import { toast } from "sonner";
 
 interface GameOverScreenProps {
   score: number;
@@ -45,6 +46,9 @@ const GameOverScreen = ({ score, onRestart }: GameOverScreenProps) => {
         {
           onSuccess: (data) => {
             console.log("Score submitted:", data);
+            toast.success("Score submitted", {
+              description: "Your score has been updated in the leaderboard.",
+            });
           },
         }
       );
@@ -65,6 +69,38 @@ const GameOverScreen = ({ score, onRestart }: GameOverScreenProps) => {
         >
           {isPending ? "CONSULTING..." : "ASK ORACLE"}
         </Button>
+        {/* <Button
+          variant={"outline"}
+          onClick={() => {
+            const currentSession = gameDB.getRecentSessions(1)[0];
+            if (currentSession) {
+              const totalKills = Object.values(
+                currentSession.enemyKillCount
+              ).reduce((sum, count) => sum + count, 0);
+              submitScore(
+                {
+                  runId: currentSession.id,
+                  finalScore: score,
+                  finalLevelReached: currentSession.finalLevelReached,
+                  timeSurvived: currentSession.timeSurvived,
+                  totalKills,
+                  totalUpgrades: currentSession.finalBuild.length,
+                  buildJson: `${JSON.stringify(currentSession.finalBuild)}`,
+                  killCountJson: `${JSON.stringify(
+                    currentSession.enemyKillCount
+                  )}`,
+                },
+                {
+                  onSuccess: (data) => {
+                    console.log("Score submitted:", data);
+                  },
+                }
+              );
+            }
+          }}
+        >
+          Submit score
+        </Button> */}
       </div>
       {advice && (
         <div className="mt-8 max-w-2xl relative bg-gray-900 p-6 rounded-lg border border-blue-500">

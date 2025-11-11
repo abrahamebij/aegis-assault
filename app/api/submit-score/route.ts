@@ -25,6 +25,7 @@ export async function POST(request: Request) {
     console.log('data: ', data);
 
     const playerAddress = session.walletAddress as `0x${string}`;
+    console.log('playerAddress: ', playerAddress);
 
     console.log(`Received score ${data.finalScore} from player ${playerAddress}`);
 
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
       },
       { name: 'buildJson', value: data.buildJson, type: 'string' }, // Now holds '{"multiShot":2, ...}'
       { name: 'killCountJson', value: data.killCountJson, type: 'string' }, // Holds '{"basic":21, ...}'
+      { name: 'player', value: playerAddress.toString(), type: "string" }
     ]);
     //
     //    b) Submit to the Somnia smart contract (for verifiable proof)
@@ -95,6 +97,6 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: 'Server error: Unable to save' }, { status: 500 });
+    return NextResponse.json({ error: 'Server error: Unable to save result to the blockchain' }, { status: 500 });
   }
 }

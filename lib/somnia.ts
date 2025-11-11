@@ -5,7 +5,7 @@ import { somniaTestnet } from 'viem/chains'
 import { getPrivateKey } from "./server";
 
 export const gameSchema = 
-  "string runId, uint256 finalScore, uint32 finalLevelReached, uint32 timeSurvived, uint32 totalKills, uint32 totalUpgrades, string buildJson, string killCountJson";
+  "string runId, uint256 finalScore, uint32 finalLevelReached, uint32 timeSurvived, uint32 totalKills, uint32 totalUpgrades, string buildJson, string killCountJson, string player";
 
 export async function initSomnia() {
   const publicClient = createPublicClient({

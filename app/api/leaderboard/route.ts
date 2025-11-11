@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server"
 import { NextResponse } from "next/server";
 import { SchemaEncoder } from "@somnia-chain/streams";
 import { privateKeyToAccount } from "viem/accounts";
 import { getPrivateKey } from "@/lib/server";
-import { initSomnia } from "@/lib/somnia";
+import { gameSchema, initSomnia } from "@/lib/somnia";
+import { parseLeaderboard } from "@/lib/utils";
 
 /**
  * @route GET /api/leaderboard
@@ -11,6 +13,7 @@ import { initSomnia } from "@/lib/somnia";
  */
 export async function GET() {
   const { sdk, schemaId } = await initSomnia();
+  // console.log('schemaId: ', schemaId);
 
   try {
     // 1️⃣ Resolve admin address (same wallet that submitted the scores)
@@ -26,26 +29,23 @@ export async function GET() {
 
     // 3️⃣ Decode data based on your schema
     const encoder = new SchemaEncoder(
-      "string runId, uint256 finalScore, uint32 finalLevelReached, uint32 timeSurvived, uint32 totalKills, uint32 totalUpgrades, string buildJson, string killCountJson"
+      gameSchema
     );
 
-    const decoded = entries.map((fields: any[]) => {
-      const obj: Record<string, any> = {};
-      for (const f of fields) {
-        obj[f.name] = f.value?.value ?? f.value;
+    // entries contains the raw data, we need to decode each entry
+    const decoded = entries.map((entry: any) => {
+      // entry should be the raw hex data that needs decoding
+      const decodedData = encoder.decodeData(entry as `0x${string}`);
+      const obj: any = {};
+      for (const field of decodedData) {
+        obj[field.name] = field.value;
       }
       return obj;
     });
+    // console.log('decoded: ', decoded);
 
-    // 4️⃣ Sort and format for the leaderboard
-    const leaderboard = decoded
-      .sort((a, b) => Number(b.finalScore) - Number(a.finalScore))
-      .slice(0, 10)
-      .map((item, i) => ({
-        rank: i + 1,
-        player: item.runId || "Unknown",
-        score: Number(item.finalScore),
-      }));
+    // Sort and format for the leaderboard
+    const leaderboard = parseLeaderboard(decoded);
 
     return NextResponse.json(leaderboard);
   } catch (err) {
